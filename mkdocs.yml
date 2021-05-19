@@ -1,0 +1,27 @@
+site_name: Siddhi IO UDP
+site_description: Siddhi IO UDP Extension
+repo_name: Siddhi-IO-UDP
+repo_url:
+edit_url:
+copyright:
+theme:
+  name: 'material'
+  logo: images/siddhi-logo.svg
+  favicon: images/favicon.ico
+  palette:
+    primary: teal
+    accent: teal
+extra_css:
+  - assets/stylesheets/extra.css
+extra_javascript:
+  - assets/javascripts/extra.js
+extra:
+  social:
+google_analytics:
+markdown_extensions:
+  - markdown.extensions.admonition
+pages:
+  - Information : index.md
+  - API Docs:
+      - latest: api/latest.md
+  - License: license.md
