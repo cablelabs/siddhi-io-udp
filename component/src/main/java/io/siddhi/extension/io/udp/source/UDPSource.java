@@ -21,7 +21,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * UDP source extension.
+ * Siddhi UDP source extension.
+ * for more information refer https://siddhi.io/en/v5.0/docs/query-guide/#source
  */
 @Extension(
         name = "udp",
@@ -37,7 +38,7 @@ import java.util.Arrays;
                 @SystemParameter(
                         name = "port",
                         description = "Tcp server port.",
-                        defaultValue = "9892",
+                        defaultValue = "5556",
                         possibleParameters = "Any integer representing valid port"
                 ),
                 @SystemParameter(
@@ -53,17 +54,6 @@ import java.util.Arrays;
                         possibleParameters = "Any positive integer"
                 ),
                 @SystemParameter(
-                        name = "tcp.no.delay",
-                        description = "This is to specify whether to disable Nagle algorithm during message passing." +
-                                "\n" +
-                                "If tcp.no.delay = 'true', the execution of Nagle algorithm  will be disabled in the " +
-                                "underlying TCP logic. Hence there will be no delay between two successive writes to " +
-                                "the TCP connection.\n" +
-                                "Else there can be a constant ack delay.",
-                        defaultValue = "true",
-                        possibleParameters = {"true", "false"}
-                ),
-                @SystemParameter(
                         name = "keep.alive",
                         description = "This property defines whether the server should be kept alive when " +
                                 "there are no connections available.",
@@ -74,17 +64,17 @@ import java.util.Arrays;
         examples = {
                 @Example(
                         syntax = "" +
-                                "@Source(type = 'udp', port=5556, @map(type='binary'))\n" +
-                                "define stream Foo (attribute1 string, attribute2 int );",
+                                "@Source(type = 'udp', port=556, @map(type='p4-trpt'))\n" +
+                                "define stream inputStream (a object);",
                         description = "" +
                                 "Under this configuration, events are received via the UDP transport on default host," +
-                                "port, and they are passed to `Foo` stream for processing. "
+                                "port, and mapped in p4-trpt before they are passed to `inputStream` stream for " +
+                                "additional processing."
 
                 )
         }
 )
 
-// for more information refer https://siddhi.io/en/v5.0/docs/query-guide/#source
 /**
  * The Sidhhi Source class for receiving UDP packets
  */
@@ -127,9 +117,6 @@ public class UDPSource extends Source {
         }
 
         this.sourceEventListener = sourceEventListener;
-//        context = optionHolder.validateAndGetStaticValue(CONTEXT,
-//                siddhiAppContext.getName() + "/" + sourceEventListener.getStreamDefinition().getId());
-
         serverConfig = new UDPServerConfig();
         serverConfig.setHost(configReader.readConfig(HOST, Constant.DEFAULT_HOST));
         serverConfig.setPort(Integer.parseInt(configReader.readConfig(PORT, "" + DEFAULT_PORT)));
