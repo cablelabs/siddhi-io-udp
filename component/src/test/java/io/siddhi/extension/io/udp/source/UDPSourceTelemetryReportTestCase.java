@@ -15,6 +15,8 @@
 
 package io.siddhi.extension.io.udp.source;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.event.Event;
@@ -24,6 +26,7 @@ import io.siddhi.extension.io.udp.TestTelemetryReports;
 import io.siddhi.extension.io.udp.transport.UDPNettyServer;
 import io.siddhi.extension.io.udp.transport.config.UDPServerConfig;
 import io.siddhi.extension.map.p4.trpt.TelemetryReport;
+import io.siddhi.extension.map.p4.trpt.TelemetryReportHeader;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -139,11 +142,16 @@ public class UDPSourceTelemetryReportTestCase {
             Assert.assertEquals(1, eventArr.length);
             final Object[] eventObjs = eventArr[0].getData();
             Assert.assertEquals(1, eventObjs.length);
-            Assert.assertTrue(eventObjs[0] instanceof TelemetryReport);
-            final TelemetryReport trpt = (TelemetryReport) eventObjs[0];
-            Assert.assertEquals(2, trpt.trptHdr.getVersion());
-            Assert.assertEquals(234, trpt.trptHdr.getNodeId());
-            Assert.assertEquals(21587, trpt.trptHdr.getDomainId());
+            Assert.assertTrue(eventObjs[0] instanceof String);
+
+            final JsonParser jsonParser = new JsonParser();
+            final JsonObject jsonObj = jsonParser.parse((String) eventObjs[0]).getAsJsonObject();
+            Assert.assertNotNull(jsonObj);
+            final JsonObject trptHdrJson = jsonObj.getAsJsonObject(TelemetryReport.TRPT_HDR_KEY);
+            org.junit.Assert.assertNotNull(trptHdrJson);
+            Assert.assertEquals(2, trptHdrJson.get(TelemetryReportHeader.TRPT_VER_KEY).getAsInt());
+            Assert.assertEquals(234, trptHdrJson.get(TelemetryReportHeader.TRPT_NODE_ID_KEY).getAsLong());
+            Assert.assertEquals(21587, trptHdrJson.get(TelemetryReportHeader.TRPT_DOMAIN_ID_KEY).getAsLong());
         }
     }
 

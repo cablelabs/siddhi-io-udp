@@ -36,7 +36,7 @@
         <dependency>
             <groupId>com.github.cablelabs</groupId>
             <artifactId>siddhi-map-p4-trpt</artifactId>
-            <version>-SNAPSHOT</version>
+            <version>master-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
