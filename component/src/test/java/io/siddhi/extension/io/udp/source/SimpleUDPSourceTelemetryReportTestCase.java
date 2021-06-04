@@ -40,9 +40,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Testcase of UDPSource.
+ * Simple tests for the UDP Source extension with the p4-trpt mapper.
+ * This test case sends mock Telemetry report UDP packets to this UDP source Siddhi extension and ensures each of the
+ * resulting JSON documents contains the expected values.
  */
-public class UDPSourceTelemetryReportTestCase {
+public class SimpleUDPSourceTelemetryReportTestCase {
         // If you will know about this related testcase,
         //refer https://github.com/siddhi-io/siddhi-io-file/blob/master/component/src/test
 
@@ -53,19 +55,20 @@ public class UDPSourceTelemetryReportTestCase {
     @BeforeMethod
     public void setUp() {
         log.info("In setUp()");
-         events = new ArrayList<>();
+        events = new ArrayList<>();
+
         // Starting Siddhi Runtime
         final SiddhiManager siddhiManager = new SiddhiManager();
-//        siddhiManager.setExtension("p4-trpt", P4TrptSourceMapper.class);
 
-        final String inStreamDefinition = "" +
-                "@app:name('udpTest')" +
-                "@source(type='udp', @map(type='p4-trpt'))" + // This requires
-                "define stream inputStream (a object);";
-        final String query = ("@info(name = 'query1') " +
+        final String inStreamDefinition =
+                "@app:name('Simple-UDP-Trpt-Tests')" +
+                "@source(type='udp', listen.port='5556', @map(type='p4-trpt'))" + // This requires
+                "define stream inputStream (a String);";
+        final String query =
+                "@info(name = 'query1') " +
                 "from inputStream " +
                 "select *  " +
-                "insert into outputStream;");
+                "insert into outputStream;";
         siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
         siddhiAppRuntime.addCallback("query1", new QueryCallback() {
             @Override
@@ -132,6 +135,8 @@ public class UDPSourceTelemetryReportTestCase {
             final InetAddress address = InetAddress.getByName("localhost");
             final DatagramPacket packet = new DatagramPacket(eventBytes, 0, eventBytes.length,
                     address, new UDPServerConfig().getPort());
+            // TODO - need to get this
+            // configReader.readConfig(KEEP_ALIVE, "" + Constant.DEFAULT_KEEP_ALIVE)
             final DatagramSocket datagramSocket = new DatagramSocket();
             datagramSocket.send(packet);
         }

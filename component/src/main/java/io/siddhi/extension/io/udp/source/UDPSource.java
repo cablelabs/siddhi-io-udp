@@ -17,7 +17,8 @@ package io.siddhi.extension.io.udp.source;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
-import io.siddhi.annotation.SystemParameter;
+import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
@@ -43,37 +44,11 @@ import java.util.Arrays;
         name = "udp",
         namespace = "source",
         description = "UDP Source for a Siddhi application. Listens to a port and sends the payload as a byte array",
-        systemParameter = {
-                @SystemParameter(
-                        name = "host",
-                        description = "Tcp server host.",
-                        defaultValue = "0.0.0.0",
-                        possibleParameters = "Any valid host or IP"
-                ),
-                @SystemParameter(
-                        name = "port",
-                        description = "Tcp server port.",
-                        defaultValue = "5556",
-                        possibleParameters = "Any integer representing valid port"
-                ),
-                @SystemParameter(
-                        name = "receiver.threads",
-                        description = "Number of threads to receive connections.",
-                        defaultValue = "10",
-                        possibleParameters = "Any positive integer"
-                ),
-                @SystemParameter(
-                        name = "worker.threads",
-                        description = "Number of threads to serve events.",
-                        defaultValue = "10",
-                        possibleParameters = "Any positive integer"
-                ),
-                @SystemParameter(
-                        name = "keep.alive",
-                        description = "This property defines whether the server should be kept alive when " +
-                                "there are no connections available.",
-                        defaultValue = "true",
-                        possibleParameters = {"true", "false"}
+        parameters = {
+                @Parameter(
+                        name = "listen.port",
+                        description = "UDP server port",
+                        type = DataType.LONG
                 )
         },
         examples = {
@@ -101,7 +76,6 @@ public class UDPSource extends Source {
     private static final String HOST = "host";
     private static final String TCP_NO_DELAY = "tcp.no.delay";
     private static final String KEEP_ALIVE = "keep.alive";
-    private static final int DEFAULT_PORT = 5556;
 
     private SourceEventListener sourceEventListener;
     private UDPNettyServer server;
@@ -134,7 +108,8 @@ public class UDPSource extends Source {
         this.sourceEventListener = sourceEventListener;
         serverConfig = new UDPServerConfig();
         serverConfig.setHost(configReader.readConfig(HOST, Constant.DEFAULT_HOST));
-        serverConfig.setPort(Integer.parseInt(configReader.readConfig(PORT, "" + DEFAULT_PORT)));
+        serverConfig.setPort(Integer.parseInt(optionHolder.getOrCreateOption(
+                "listen.port", String.valueOf(UDPServerConfig.DEFAULT_UDP_PORT)).getValue()));
         serverConfig.setKeepAlive(Boolean.parseBoolean((configReader.readConfig(
                 KEEP_ALIVE, "" + Constant.DEFAULT_KEEP_ALIVE))));
         serverConfig.setTcpNoDelay(Boolean.parseBoolean((configReader.readConfig(
