@@ -15,9 +15,9 @@
 
 package io.siddhi.extension.io.udp.source;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.event.Event;
@@ -26,8 +26,15 @@ import io.siddhi.core.util.EventPrinter;
 import io.siddhi.extension.io.udp.TestTelemetryReports;
 import io.siddhi.extension.io.udp.transport.UDPNettyServer;
 import io.siddhi.extension.io.udp.transport.config.UDPServerConfig;
-import io.siddhi.extension.map.p4.trpt.TelemetryReport;
 import io.siddhi.extension.map.p4.trpt.TelemetryReportHeader;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.LongDeserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -37,8 +44,12 @@ import org.testng.annotations.Test;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
 
 
 /**
@@ -53,24 +64,28 @@ public class UDPSourceKafkaSinkTelemetryReportTestCase {
     private static final Logger log = Logger.getLogger(UDPNettyServer.class);
     private SiddhiAppRuntime siddhiAppRuntime;
     private List<Event[]> events;
-    private SharedKafkaTestResource kafka;
+    private final String kafkaServer = "wso2-vm:9092";
+    private String testTopic;
+//    private SharedKafkaTestResource kafka;
+    private KafkaRunnable consumerRunnable;
 
     @BeforeMethod
     public void setUp() throws Exception {
         log.info("In setUp()");
         events = new ArrayList<>();
-        kafka = new SharedKafkaTestResource();
+//        kafka = new SharedKafkaTestResource();
+        testTopic = UUID.randomUUID().toString();
 
-        final String inStreamDefinition =
-                "@app:name('Filter-TRPT-Tests')" +
-                "@source(type='udp', listen.port='5556', @map(type='p4-trpt'))" +
-                // TODO - When sink is defined, only one event is sent
-//                "@sink(type='kafka', topic='test', bootstrap.servers='localhost:9092', @map(type='text'))" +
-                "define stream trptUdpPktStream (trptJson String);";
+        final String inStreamDefinition = String.format(
+                "@app:name('Filter-TRPT-Tests')\n" +
+                "@source(type='udp', listen.port='5556', @map(type='p4-trpt'))\n" +
+                "@sink(type='kafka', topic='%s', bootstrap.servers='%s'," +
+                    "@map(type='text'))\n" +
+                "define stream trptUdpPktStream (trptJson OBJECT);\n", testTopic, kafkaServer);
         final String query =
-                "@info(name = 'query1') " +
-                "from trptUdpPktStream " +
-                "select *  " +
+                "@info(name = 'query1')\n" +
+                "from trptUdpPktStream\n" +
+                "select *\n" +
                 "insert into outputStream;";
         final SiddhiManager siddhiManager = new SiddhiManager();
         siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
@@ -83,44 +98,65 @@ public class UDPSourceKafkaSinkTelemetryReportTestCase {
         });
         siddhiAppRuntime.start();
 
+        consumerRunnable = runConsumer();
+
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
         log.info("In tearDown()");
+        siddhiAppRuntime.shutdown();
+        final Properties conf = new Properties();
+        conf.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "wso2-vm:9092");
+        conf.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, "5000");
+        final AdminClient client = AdminClient.create(conf);
+        client.deleteTopics(Collections.singletonList(testTopic));
+
 //        for (final KafkaBroker broker : KAFKA.getKafkaBrokers().asList()) {
 //            broker.stop();
 //        }
-        siddhiAppRuntime.shutdown();
-//        log.info("Siddhi App Runtime down");
-    }
 
-//    private void createSiddhiRuntime(final String queryName, final String siddhiStr) {
-//        final SiddhiManager siddhiManager = new SiddhiManager();
-//        siddhiManager.setExtension("kafka", KafkaSink.class);
-//        siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(siddhiStr);
-//        siddhiAppRuntime.addCallback(queryName, new QueryCallback() {
-//            @Override
-//            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
-//                EventPrinter.print(timeStamp, inEvents, removeEvents);
-//                events.add(inEvents);
-//            }
-//        });
-//        siddhiAppRuntime.start();
-//    }
+        // Delete topic
+        log.info("Siddhi App Runtime down");
+    }
 
     @Test
     public void testTelemetryReportUdp4() throws Exception {
-
-        final int numTestEvents = 10;
+        final int numTestEvents = 50;
         sendTestEvents(TestTelemetryReports.UDP4_2HOPS, numTestEvents);
 
         // Wait a sec for the processing to complete
-        Thread.sleep(10000);
-        Assert.assertEquals(numTestEvents, events.size());
+        Thread.sleep(2000);
 
-        // TODO - Add topic listener and validate payload received
         validateTelemetryReports();
+
+        Assert.assertEquals(consumerRunnable.events.size(), consumerRunnable.numRecordsCount);
+        Assert.assertEquals(numTestEvents, consumerRunnable.numRecordsCount);
+        Assert.assertEquals(numTestEvents, consumerRunnable.events.size());
+    }
+
+    private KafkaRunnable runConsumer() {
+        final Consumer<Long, String> consumer = createConsumer();
+        final KafkaRunnable out = new KafkaRunnable(consumer);
+        final Thread kafkaConsumerThread = new Thread(out);
+        kafkaConsumerThread.start();
+        return out;
+    }
+
+    private Consumer<Long, String> createConsumer() {
+        final Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG,
+                "UDPSourceKafkaSinkTelemetryReportTestCase-" + System.currentTimeMillis());
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+        // Create the consumer using props.
+        final Consumer<Long, String> consumer = new KafkaConsumer<>(props);
+
+        // Subscribe to the topic.
+        consumer.subscribe(Collections.singletonList(testTopic));
+        return consumer;
     }
 
     private void sendTestEvents(final byte[] eventBytes, final int numTestEvents) throws Exception {
@@ -132,27 +168,59 @@ public class UDPSourceKafkaSinkTelemetryReportTestCase {
             // configReader.readConfig(KEEP_ALIVE, "" + Constant.DEFAULT_KEEP_ALIVE)
             final DatagramSocket datagramSocket = new DatagramSocket();
             datagramSocket.send(packet);
-            Thread.sleep(100);
+            Thread.sleep(1);
         }
     }
 
     private void validateTelemetryReports() {
-        for (final Event[] eventArr : events) {
-            Assert.assertEquals(1, eventArr.length);
-            final Object[] eventObjs = eventArr[0].getData();
-            Assert.assertEquals(1, eventObjs.length);
-            Assert.assertTrue(eventObjs[0] instanceof String);
-
-            final JsonParser jsonParser = new JsonParser();
-            final JsonObject jsonObj = jsonParser.parse((String) eventObjs[0]).getAsJsonObject();
-            Assert.assertNotNull(jsonObj);
-            final JsonObject trptHdrJson = jsonObj.getAsJsonObject(TelemetryReport.TRPT_HDR_KEY);
-            org.junit.Assert.assertNotNull(trptHdrJson);
+        for (final String eventStr : consumerRunnable.events) {
+            final JsonParser parser = new JsonParser();
+            final JsonElement jsonElement = parser.parse(eventStr.replaceAll("trptJson:", ""));
+            final JsonObject trptJsonObj = jsonElement.getAsJsonObject();
+            Assert.assertNotNull(trptJsonObj);
+            final JsonObject trptHdrJson = trptJsonObj.get("telemRptHdr").getAsJsonObject();
+            Assert.assertNotNull(trptHdrJson);
             Assert.assertEquals(2, trptHdrJson.get(TelemetryReportHeader.TRPT_VER_KEY).getAsInt());
             Assert.assertEquals(234, trptHdrJson.get(TelemetryReportHeader.TRPT_NODE_ID_KEY).getAsLong());
             Assert.assertEquals(21587, trptHdrJson.get(TelemetryReportHeader.TRPT_DOMAIN_ID_KEY).getAsLong());
         }
     }
 
+    private class KafkaRunnable implements Runnable {
+
+        final Consumer<Long, String> consumer;
+        int numRecordsCount = 0;
+        final List<String> events = new ArrayList<>();
+
+        KafkaRunnable(final Consumer<Long, String> consumer) {
+            this.consumer = consumer;
+        }
+
+        private boolean running = true;
+
+        public synchronized void stop() {
+            running = false;
+        }
+
+        @Override
+        public synchronized void run() {
+            while (running) {
+                final ConsumerRecords<Long, String> consumerRecords = consumer.poll(Duration.ofMillis(1000));
+                if (consumerRecords.count() != 0) {
+                    numRecordsCount += consumerRecords.count();
+
+                    consumerRecords.forEach(record -> {
+                        System.out.printf("Consumer Record:(%d, %s, %d, %d)\n",
+                                record.key(), record.value(),
+                                record.partition(), record.offset());
+                        events.add(record.value());
+                    });
+                }
+
+                consumer.commitSync();
+            }
+            consumer.close();
+        }
+    }
 }
 
