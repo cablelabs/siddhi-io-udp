@@ -33,8 +33,8 @@
             <artifactId>siddhi-io-tcp</artifactId>
             <version>3.0.5</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.cablelabs</groupId>
+        <dependency> <!-- Built with JitPack -->
+            <groupId>com.github.cablelabs.siddhi-map-p4-trpt</groupId>
             <artifactId>siddhi-map-p4-trpt</artifactId>
             <version>master-SNAPSHOT</version>
         </dependency>
@@ -46,10 +46,22 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.siddhi.extension.io.file</groupId>
+            <artifactId>siddhi-io-file</artifactId>
+            <version>2.0.16</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.siddhi.extension.map.text</groupId>
             <artifactId>siddhi-map-text</artifactId>
             <version>2.1.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.map.binary</groupId>
+            <artifactId>siddhi-map-binary</artifactId>
+            <version>2.1.0</version>
+            <type>bundle</type>
         </dependency>
         <dependency>
             <groupId>io.siddhi.extension.map.json</groupId>
