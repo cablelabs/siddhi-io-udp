@@ -54,28 +54,13 @@ public final class IncomingPacketHandler extends SimpleChannelInboundHandler<Dat
         packetCount++;
 
         final ByteBuf buf = packet.content();
-        byte[] bytes = new byte[buf.readableBytes()];
+        final byte[] bytes = new byte[buf.readableBytes()];
         buf.getBytes(0, bytes);
-//        ctx.write(bytes);
-
-//        Object object = bytes;
-        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-//        final Attribute.Type[] types = {Attribute.Type.OBJECT};
-//        final Event[] events = SiddhiEventConverter.toConvertToSiddhiEvents(byteBuffer, types);
-
-//        objects[0] = bytes;
-
-//        ctx.write(byteBuffer);
+        final ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
         if (sourceEventListener != null) {
             log.info("Sending out bytes to the Siddhi sourceEventListener");
             try {
-//                Event[] events = {new Event(System.currentTimeMillis(), byteBuffer)};
-//                sourceEventListener.onEvent(new Event(System.currentTimeMillis(), byteBuffer), new String[0]);
-//                sourceEventListener.onEvent(events, new String[0]);
-//                sourceEventListener.onEvent(events, null);
-//                onEvents(SiddhiEventConverter.toConvertToSiddhiEvents(ByteBuffer.wrap(message), types));
-                sourceEventListener.onEvent(byteBuffer, null);
-//                sourceEventListener.onEvent(events, null);
+                sourceEventListener.onEvent(byteBuffer.array(), null);
             } catch (BufferUnderflowException e) {
                 log.error("Unexpected error sending sourceEventListener", e);
             }

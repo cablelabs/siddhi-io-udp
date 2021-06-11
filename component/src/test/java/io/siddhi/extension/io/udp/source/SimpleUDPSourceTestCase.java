@@ -15,18 +15,13 @@
 
 package io.siddhi.extension.io.udp.source;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.event.Event;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.util.EventPrinter;
-import io.siddhi.extension.io.udp.TestTelemetryReports;
 import io.siddhi.extension.io.udp.transport.UDPNettyServer;
 import io.siddhi.extension.io.udp.transport.config.UDPServerConfig;
-import io.siddhi.extension.map.p4.trpt.TelemetryReport;
-import io.siddhi.extension.map.p4.trpt.TelemetryReportHeader;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -36,15 +31,15 @@ import org.testng.annotations.Test;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Simple tests for the UDP Source extension with the p4-trpt mapper.
- * This test case sends mock Telemetry report UDP packets to this UDP source Siddhi extension and ensures each of the
- * resulting JSON documents contains the expected values.
+ * Simple tests for the UDP Source extension with the text mapper.
+ * This test case sends mock UDP packet with a text payload to the UDP source Siddhi extension.
  */
-public class SimpleUDPSourceTelemetryReportTestCase {
+public class SimpleUDPSourceTestCase {
         // If you will know about this related testcase,
         //refer https://github.com/siddhi-io/siddhi-io-file/blob/master/component/src/test
 
@@ -61,9 +56,9 @@ public class SimpleUDPSourceTelemetryReportTestCase {
         final SiddhiManager siddhiManager = new SiddhiManager();
 
         final String inStreamDefinition =
-                "@app:name('Simple-UDP-Trpt-Tests')" +
-                "@source(type='udp', listen.port='5556', @map(type='p4-trpt'))" + // This requires
-                "define stream inputStream (a String);";
+                "@app:name('Simple-UDP-Tests')" +
+                "@source(type='udp', listen.port='5556', @map(type='text'))\n" +
+                "define stream inputStream (foo long);";
         final String query =
                 "@info(name = 'query1') " +
                 "from inputStream " +
@@ -87,47 +82,19 @@ public class SimpleUDPSourceTelemetryReportTestCase {
     }
 
     @Test
-    public void testTelemetryReportUdp4() throws Exception {
-        final int numTestEvents = 10;
-        sendTestEvents(TestTelemetryReports.UDP4_2HOPS, numTestEvents);
+    public void testSendTextPayload() throws Exception {
+        final int numTestEvents = 100;
+        sendTestEvents("foo:123".getBytes(StandardCharsets.UTF_8), numTestEvents);
 
         // Wait a sec for the processing to complete
-        Thread.sleep(1000);
-        Assert.assertEquals(numTestEvents, events.size());
-        validateTelemetryReports();
-    }
-
-    @Test
-    public void testTelemetryReportUdp6() throws Exception {
-        final int numTestEvents = 10;
-        sendTestEvents(TestTelemetryReports.UDP6_2HOPS, numTestEvents);
-
-        // Wait a sec for the processing to complete
-        Thread.sleep(1000);
-        Assert.assertEquals(numTestEvents, events.size());
-        validateTelemetryReports();
-    }
-
-    @Test
-    public void testTelemetryReportTcp4() throws Exception {
-        final int numTestEvents = 10;
-        sendTestEvents(TestTelemetryReports.TCP4_2HOPS, numTestEvents);
-
-        // Wait a sec for the processing to complete
-        Thread.sleep(1000);
-        Assert.assertEquals(numTestEvents, events.size());
-        validateTelemetryReports();
-    }
-
-    @Test
-    public void testTelemetryReportTcp6() throws Exception {
-        final int numTestEvents = 10;
-        sendTestEvents(TestTelemetryReports.TCP6_2HOPS, numTestEvents);
-
-        // Wait a sec for the processing to complete
-        Thread.sleep(1000);
-        Assert.assertEquals(numTestEvents, events.size());
-        validateTelemetryReports();
+        Thread.sleep(500);
+        Assert.assertEquals(events.size(), numTestEvents);
+        for (final Event[] eventArr : events) {
+            Assert.assertEquals(eventArr.length, 1);
+            final Event event = eventArr[0];
+            Assert.assertEquals(event.getData().length, 1);
+            Assert.assertEquals(event.getData()[0], 123L);
+        }
     }
 
     private void sendTestEvents(final byte[] eventBytes, final int numTestEvents) throws Exception {
@@ -139,24 +106,6 @@ public class SimpleUDPSourceTelemetryReportTestCase {
             // configReader.readConfig(KEEP_ALIVE, "" + Constant.DEFAULT_KEEP_ALIVE)
             final DatagramSocket datagramSocket = new DatagramSocket();
             datagramSocket.send(packet);
-        }
-    }
-
-    private void validateTelemetryReports() {
-        for (final Event[] eventArr : events) {
-            Assert.assertEquals(1, eventArr.length);
-            final Object[] eventObjs = eventArr[0].getData();
-            Assert.assertEquals(1, eventObjs.length);
-            Assert.assertTrue(eventObjs[0] instanceof String);
-
-            final JsonParser jsonParser = new JsonParser();
-            final JsonObject jsonObj = jsonParser.parse((String) eventObjs[0]).getAsJsonObject();
-            Assert.assertNotNull(jsonObj);
-            final JsonObject trptHdrJson = jsonObj.getAsJsonObject(TelemetryReport.TRPT_HDR_KEY);
-            org.junit.Assert.assertNotNull(trptHdrJson);
-            Assert.assertEquals(2, trptHdrJson.get(TelemetryReportHeader.TRPT_VER_KEY).getAsInt());
-            Assert.assertEquals(234, trptHdrJson.get(TelemetryReportHeader.TRPT_NODE_ID_KEY).getAsLong());
-            Assert.assertEquals(21587, trptHdrJson.get(TelemetryReportHeader.TRPT_DOMAIN_ID_KEY).getAsLong());
         }
     }
 
