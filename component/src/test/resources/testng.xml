@@ -5,9 +5,7 @@
 <suite name="Siddhi-IO-UDP-Test-Suite">
     <test name="Siddhi-io-udp-tests" enabled="true" parallel="false">
         <classes>
-            <class name="io.siddhi.extension.io.udp.source.SimpleUDPSourceTelemetryReportTestCase"/>
-            <class name="io.siddhi.extension.io.udp.source.UDPSourceKafkaSinkTelemetryReportTestCase"/>
-            <class name="io.siddhi.extension.io.udp.source.UDPSourceToKafkaSourceTelemetryReportTestCase"/>
+            <class name="io.siddhi.extension.io.udp.source.SimpleUDPSourceTestCase"/>
         </classes>
     </test>
 </suite>

@@ -62,18 +62,6 @@
                 <version>${log4j.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.siddhi.extension.map.xml</groupId>
-                <artifactId>siddhi-map-xml</artifactId>
-                <version>${siddhi.map.xml.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.siddhi.extension.map.json</groupId>
-                <artifactId>siddhi-map-json</artifactId>
-                <version>${siddhi.map.json.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
@@ -144,8 +132,6 @@
         <log4j.version>1.2.17</log4j.version>
         <testng.version>6.8</testng.version>
         <junit.version>4.13.2</junit.version>
-        <siddhi.map.json.version>5.0.2</siddhi.map.json.version>
-        <siddhi.map.xml.version>5.0.2</siddhi.map.xml.version>
         <jacoco.plugin.version>0.7.9</jacoco.plugin.version>
     </properties>
 </project>

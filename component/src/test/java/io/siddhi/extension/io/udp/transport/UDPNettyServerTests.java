@@ -15,7 +15,6 @@
 
 package io.siddhi.extension.io.udp.transport;
 
-import io.siddhi.extension.io.udp.TestTelemetryReports;
 import io.siddhi.extension.io.udp.transport.config.UDPServerConfig;
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,8 +38,10 @@ public class UDPNettyServerTests {
         int ctr = 0;
         while (ctr < 10) {
             final InetAddress address = InetAddress.getByName("localhost");
-            final DatagramPacket packet = new DatagramPacket(
-                    TestTelemetryReports.UDP4_2HOPS, TestTelemetryReports.UDP4_2HOPS.length);
+            final byte[] bytes = new byte[2];
+            bytes[0] = 1;
+            bytes[1] = 2;
+            final DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
             packet.setAddress(address);
             packet.setPort(serverConf.getPort());
             final DatagramSocket datagramSocket = new DatagramSocket();
