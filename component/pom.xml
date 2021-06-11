@@ -33,10 +33,47 @@
             <artifactId>siddhi-io-tcp</artifactId>
             <version>3.0.5</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.cablelabs</groupId>
+        <dependency> <!-- Built with JitPack -->
+            <groupId>com.github.cablelabs.siddhi-map-p4-trpt</groupId>
             <artifactId>siddhi-map-p4-trpt</artifactId>
             <version>master-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.io.kafka</groupId>
+            <artifactId>siddhi-io-kafka</artifactId>
+            <version>5.0.12</version>
+            <type>bundle</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.io.file</groupId>
+            <artifactId>siddhi-io-file</artifactId>
+            <version>2.0.16</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.map.text</groupId>
+            <artifactId>siddhi-map-text</artifactId>
+            <version>2.1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.map.binary</groupId>
+            <artifactId>siddhi-map-binary</artifactId>
+            <version>2.1.0</version>
+            <type>bundle</type>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.map.json</groupId>
+            <artifactId>siddhi-map-json</artifactId>
+            <version>5.2.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>2.8.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

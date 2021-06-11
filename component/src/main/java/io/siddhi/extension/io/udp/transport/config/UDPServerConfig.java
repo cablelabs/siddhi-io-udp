@@ -20,7 +20,7 @@ package io.siddhi.extension.io.udp.transport.config;
  */
 public class UDPServerConfig extends io.siddhi.extension.io.tcp.transport.config.ServerConfig {
 
-    static final int DEFAULT_UDP_PORT = 5556;
+    public static final int DEFAULT_UDP_PORT = 5556;
 
     public UDPServerConfig() {
         super();

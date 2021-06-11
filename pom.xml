@@ -56,11 +56,6 @@
                 <artifactId>siddhi-query-compiler</artifactId>
                 <version>${siddhi.version}</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>io.siddhi.extension.map.p4.trpt</groupId>-->
-<!--                <artifactId>siddhi-map-p4-trpt-parent</artifactId>-->
-<!--                <version>1.0.0-SNAPSHOT</version>-->
-<!--            </dependency>-->
             <dependency>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
@@ -145,7 +140,7 @@
         </plugins>
     </build>
     <properties>
-        <siddhi.version>5.1.13</siddhi.version>
+        <siddhi.version>5.1.14</siddhi.version>
         <log4j.version>1.2.17</log4j.version>
         <testng.version>6.8</testng.version>
         <junit.version>4.13.2</junit.version>

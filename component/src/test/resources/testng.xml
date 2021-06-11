@@ -3,9 +3,11 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="Siddhi-IO-UDP-Test-Suite">
-    <test name="Siddhi-io-udp-tests" enabled="true" preserve-order="true" parallel="false">
+    <test name="Siddhi-io-udp-tests" enabled="true" parallel="false">
         <classes>
-            <class name="io.siddhi.extension.io.udp.source.UDPSourceTelemetryReportTestCase"/>
+            <class name="io.siddhi.extension.io.udp.source.SimpleUDPSourceTelemetryReportTestCase"/>
+            <class name="io.siddhi.extension.io.udp.source.UDPSourceKafkaSinkTelemetryReportTestCase"/>
+            <class name="io.siddhi.extension.io.udp.source.UDPSourceToKafkaSourceTelemetryReportTestCase"/>
         </classes>
     </test>
 </suite>
