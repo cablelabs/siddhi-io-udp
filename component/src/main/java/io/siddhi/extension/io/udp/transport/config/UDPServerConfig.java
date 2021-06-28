@@ -25,5 +25,6 @@ public class UDPServerConfig extends io.siddhi.extension.io.tcp.transport.config
     public UDPServerConfig() {
         super();
         this.setPort(DEFAULT_UDP_PORT);
+        this.setHost("*");
     }
 }

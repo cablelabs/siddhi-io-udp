@@ -107,7 +107,6 @@ public class UDPSource extends Source {
 
         this.sourceEventListener = sourceEventListener;
         serverConfig = new UDPServerConfig();
-        serverConfig.setHost(configReader.readConfig(HOST, Constant.DEFAULT_HOST));
         serverConfig.setPort(Integer.parseInt(optionHolder.getOrCreateOption(
                 "listen.port", String.valueOf(UDPServerConfig.DEFAULT_UDP_PORT)).getValue()));
         serverConfig.setKeepAlive(Boolean.parseBoolean((configReader.readConfig(
