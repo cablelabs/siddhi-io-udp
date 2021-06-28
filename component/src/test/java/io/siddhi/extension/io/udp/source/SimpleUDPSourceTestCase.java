@@ -30,9 +30,13 @@ import org.testng.annotations.Test;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -82,12 +86,26 @@ public class SimpleUDPSourceTestCase {
     }
 
     @Test
-    public void testSendTextPayload() throws Exception {
+    public void testSendTextPayloadIpv4() throws Exception {
         final int numTestEvents = 100;
-        sendTestEvents("foo:123".getBytes(StandardCharsets.UTF_8), numTestEvents);
+        sendTestEvents("foo:123".getBytes(StandardCharsets.UTF_8), numTestEvents, "lo", 4);
 
         // Wait a sec for the processing to complete
         Thread.sleep(500);
+        validateTestEvents(numTestEvents);
+    }
+
+    @Test
+    public void testSendTextPayloadIpv6() throws Exception {
+        final int numTestEvents = 100;
+        sendTestEvents("foo:123".getBytes(StandardCharsets.UTF_8), numTestEvents, "lo", 6);
+
+        // Wait a sec for the processing to complete
+        Thread.sleep(500);
+        validateTestEvents(numTestEvents);
+    }
+
+    private void validateTestEvents(final int numTestEvents) {
         Assert.assertEquals(events.size(), numTestEvents);
         for (final Event[] eventArr : events) {
             Assert.assertEquals(eventArr.length, 1);
@@ -97,15 +115,31 @@ public class SimpleUDPSourceTestCase {
         }
     }
 
-    private void sendTestEvents(final byte[] eventBytes, final int numTestEvents) throws Exception {
+    private void sendTestEvents(final byte[] eventBytes, final int numTestEvents, final String intfName,
+                                final int ipVer) throws Exception {
         for (int ctr = 0; ctr < numTestEvents; ctr++) {
-            final InetAddress address = InetAddress.getByName("localhost");
-            final DatagramPacket packet = new DatagramPacket(eventBytes, 0, eventBytes.length,
-                    address, new UDPServerConfig().getPort());
-            // TODO - need to get this
-            // configReader.readConfig(KEEP_ALIVE, "" + Constant.DEFAULT_KEEP_ALIVE)
-            final DatagramSocket datagramSocket = new DatagramSocket();
-            datagramSocket.send(packet);
+            final NetworkInterface netIface = NetworkInterface.getByName("lo");
+            final Enumeration inetAddresses = netIface.getInetAddresses();
+            InetAddress address = null;
+
+            while (inetAddresses.hasMoreElements()) {
+                final InetAddress addr = (InetAddress) inetAddresses.nextElement();
+                if (ipVer == 4 && addr instanceof Inet4Address) {
+                    address = addr;
+                    break;
+                } else if (ipVer == 6 && addr instanceof Inet6Address) {
+                    address = addr;
+                    break;
+                }
+            }
+            if (address != null) {
+                final DatagramPacket packet = new DatagramPacket(eventBytes, 0, eventBytes.length,
+                        address, new UDPServerConfig().getPort());
+                // TODO - need to get this
+                // configReader.readConfig(KEEP_ALIVE, "" + Constant.DEFAULT_KEEP_ALIVE)
+                final DatagramSocket datagramSocket = new DatagramSocket();
+                datagramSocket.send(packet);
+            }
         }
     }
 
