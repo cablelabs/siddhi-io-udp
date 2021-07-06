@@ -58,7 +58,7 @@ public final class IncomingPacketHandler extends SimpleChannelInboundHandler<Dat
         buf.getBytes(0, bytes);
         final ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
         if (sourceEventListener != null) {
-            log.info("Sending out bytes to the Siddhi sourceEventListener");
+            log.trace("Sending out bytes to the Siddhi sourceEventListener");
             try {
                 sourceEventListener.onEvent(byteBuffer.array(), null);
             } catch (BufferUnderflowException e) {
