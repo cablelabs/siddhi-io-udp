@@ -1,19 +1,61 @@
-﻿Siddhi Store ${typeOfIOinCamelCase}
+﻿Siddhi IO UDP
 ======================================
 
-The **siddhi-io-udp extension** is an extension to <a target="_blank" href="https://siddhi.io">Siddhi</a> that receives and publishes events via 
+The **siddhi-io-udp extension** is an extension to <a target="_blank" href="https://siddhi.io">Siddhi</a> that receives
+UDP Packets and passes the packet payload to a mapper to extract the data.
 
 For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and it's features refer <a target="_blank" href="https://siddhi.io/redirect/docs.html">Siddhi Documentation</a>. 
 
-## Download
+## Obtain bundle via Maven
 
-Versions with group id `io.siddhi.extension.io.*` from <a target="_blank" href="https://mvnrepository.com/artifact/io.siddhi.extension.io.udp/siddhi-io-udp/">here</a>.
+Other Siddhi I/O extensions can include this project into their build by adding the following repository and dependency
+to the component's pom.xml file.
+
+```xml
+    <repositories>
+        ...
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        ...
+    </repositories>
+```
+
+```xml
+    <dependencies>
+        ...
+        <dependency>
+            <groupId>com.github.cablelabs</groupId>
+            <artifactId>siddhi-io-udp</artifactId>
+            <version>master-SNAPSHOT</version>
+        </dependency>
+        ...
+    </dependencies>
+```
 
 ## Latest API Docs
 
 ## Features
+
+* udp (Source) - A Siddhi application can be configured to receive events vial the UDP transport by adding the
+@Sink(type = 'udp') annotation at the top of an event stream definition
     
 ## Dependencies 
+
+This I/O extension extends its functionality from the siddhi-io-tcp as it is basically doing the same thing except with
+UDP packets rather than TCP.
+```xml
+    <dependencies>
+        ...
+        <dependency>
+            <groupId>io.siddhi.extension.io.tcp</groupId>
+            <artifactId>siddhi-io-tcp</artifactId>
+            <version>3.0.5</version>
+        </dependency>
+        ...
+    </dependencies>
+```
    
 ## Installation
    
